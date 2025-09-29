@@ -23,6 +23,22 @@ export default function Dashboard() {
   const [showQR, setShowQR] = useState(false);
   const [qrCodeUrl, setQrCodeUrl] = useState('');
   const [savedPetId, setSavedPetId] = useState<string | null>(null);
+  const [pets, setPets] = useState<Pet[]>([]);
+
+  useEffect(() => {
+    const fetchPets = async () => {
+      const { data, error } = await supabase
+        .from('pets')
+        .select('*')
+        .order('created_at', { ascending: false });
+      if (error) {
+        console.error('Error fetching pets:', error);
+      } else {
+        setPets(data || []);
+      }
+    };
+    fetchPets();
+  }, [savedPetId]); // Se actualiza cuando guardas una nueva mascota
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
@@ -153,6 +169,17 @@ export default function Dashboard() {
           {/* Preview Column */}
           <div>
             <PetPreview petData={petData} />
+            {/* Lista de mascotas guardadas */}
+            <div className="mt-8">
+              <h2 className="text-xl font-bold mb-4">Mis mascotas guardadas</h2>
+              {pets.length === 0 ? (
+                <p className="text-gray-600">No tienes mascotas guardadas.</p>
+              ) : (
+                pets.map(pet => (
+                  <PetPreview key={pet.id} petData={pet} />
+                ))
+              )}
+            </div>
           </div>
         </div>
       </div>
